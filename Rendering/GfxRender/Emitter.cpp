@@ -394,7 +394,7 @@ void Emitter::draw(RenderQueue& rq)
         std::sort(p, p+plist.size(), ZSortPr());
     }
 
-    for (unsigned j=0, e = visiblePCount; j<e; ++j)
+for (unsigned j=0, e = visiblePCount; j<e; ++j)
     {
         Particle& p = plist[j];
 
@@ -403,64 +403,38 @@ void Emitter::draw(RenderQueue& rq)
         v.y = p.pos.y;
         v.z = p.pos.z;
         v.cline[0] = p.cline;
-v.cline[1] = 0;
+        v.cline[1] = 0;
 
-          float sx = p.sx;
-          float sy = p.sy;
+        float sx = p.sx;
+        float sy = p.sy;
 
-          // Apply Squash effect
-          if (squash != 0.0f)
-          {
-              Vector3 velDir = p.vel;
-              float velLen = velDir.length();
-              if (velLen > 0.001f)
-              {
-                  velDir /= velLen;
-                  Vector3 viewDir = (cam.getPosition() - p.pos).normalize();
-                  // Project velocity onto plane perpendicular to view
-                  float dot = velDir.dot(viewDir);
-                  Vector3 velInViewPlane = velDir - viewDir * dot;
-                  float velInViewLen = velInViewPlane.length();
-                  if (velInViewLen > 0.001f)
-                  {
-                      velInViewPlane /= velInViewLen;
-                      // Apply squash: scale along velocity, inverse scale perpendicular
-                      float squashFactor = 1.0f - squash;
-                      float invSquashFactor = 1.0f + squash;
-                      sx *= squashFactor;
-                      sy *= invSquashFactor;
-                  }
-              }
-          }
+        // Apply Squash effect
+        if (squash != 0.0f)
+        {
+            Vector3 velDir = p.vel;
+            float velLen = velDir.length();
+            if (velLen > 0.001f)
+            {
+                velDir /= velLen;
+                Vector3 viewDir = (cam.getPosition() - p.pos);
+                viewDir = viewDir.unit();
+                // Project velocity onto plane perpendicular to view
+                float dot = velDir.dot(viewDir);
+                Vector3 velInViewPlane = velDir - viewDir * dot;
+                float velInViewLen = velInViewPlane.length();
+                if (velInViewLen > 0.001f)
+                {
+                    velInViewPlane /= velInViewLen;
+                    // Apply squash: scale along velocity, inverse scale perpendicular
+                    float squashFactor = 1.0f - squash;
+                    float invSquashFactor = 1.0f + squash;
+                    sx *= squashFactor;
+                    sy *= invSquashFactor;
+                }
+            }
+        }
 
-          Vector3 color;
-              Vector3 velDir = p.vel;
-              float velLen = velDir.length();
-              if (velLen > 0.001f)
-              {
-                  velDir /= velLen;
-                  Vector3 viewDir = (cam.getPosition() - p.pos).normalize();
-                  // Project velocity onto plane perpendicular to view
-                  float dot = velDir.dot(viewDir);
-                  Vector3 velInViewPlane = velDir - viewDir * dot;
-                  float velInViewLen = velInViewPlane.length();
-                  if (velInViewLen > 0.001f)
-                  {
-                      velInViewPlane /= velInViewLen;
-                      // Compute right vector in billboard plane
-                      Vector3 right = viewDir.cross(velInViewPlane);
-                      // Apply squash: scale along velocity, inverse scale perpendicular
-                      float squashFactor = 1.0f - squash;
-                      float invSquashFactor = 1.0f + squash;
-                      // Transform sx/sy from local particle space to view space
-                      // For simplicity, apply squash to sx (along velocity) and inverse to sy
-                      sx *= squashFactor;
-                      sy *= invSquashFactor;
-                  }
-              }
-          }
-  
-          Vector3 color;
+        Vector3 color;
 
         if (enableCurves)
         {
