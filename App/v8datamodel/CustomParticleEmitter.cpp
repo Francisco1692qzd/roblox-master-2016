@@ -34,6 +34,7 @@ namespace RBX
 	, lockedToLocalSpace(false)
 	, dampening(0)
 	, velocityInheritance(0)
+	, squash(0)
 	, emissionDirection(RBX::NORM_Y)
     {
     }
@@ -63,6 +64,7 @@ namespace RBX
     Reflection::PropDescriptor<CustomParticleEmitter, float>         CustomParticleEmitter::prop_zOffset("ZOffset", CAT_VIS, &CustomParticleEmitter::getZOffset, &CustomParticleEmitter::setZOffset);
 	Reflection::PropDescriptor<CustomParticleEmitter, float>		 CustomParticleEmitter::prop_velocityInheritance("VelocityInheritance", CAT_PARTICLE_BEHAVIOR, &CustomParticleEmitter::getVelocityInheritance, &CustomParticleEmitter::setVelocityInheritance);
 	Reflection::PropDescriptor<CustomParticleEmitter, float>		 CustomParticleEmitter::prop_dampening("Drag", CAT_PARTICLE_BEHAVIOR, &CustomParticleEmitter::getDampening, &CustomParticleEmitter::setDampening);
+	Reflection::PropDescriptor<CustomParticleEmitter, float>		 CustomParticleEmitter::prop_squash("Squash", CAT_PARTICLE_BEHAVIOR, &CustomParticleEmitter::getSquash, &CustomParticleEmitter::setSquash);
 	Reflection::PropDescriptor<CustomParticleEmitter, bool>			 CustomParticleEmitter::prop_lockedToLocalSpace("LockedToPart", CAT_PARTICLE_BEHAVIOR, &CustomParticleEmitter::getLockedToLocalSpace, &CustomParticleEmitter::setLockedToLocalSpace);
 	Reflection::EnumPropDescriptor<CustomParticleEmitter, NormalId>  CustomParticleEmitter::prop_emissionDirection("EmissionDirection", CAT_EMISSION, &CustomParticleEmitter::getEmissionDirection, &CustomParticleEmitter::setEmissionDirection);
 
@@ -199,6 +201,15 @@ namespace RBX
 		{
 			dampening = value;
 			raisePropertyChanged(prop_dampening);
+		}
+	}
+
+	void CustomParticleEmitter::setSquash(float value)
+	{
+		if (value != squash)
+		{
+			squash = value;
+			raisePropertyChanged(prop_squash);
 		}
 	}
 

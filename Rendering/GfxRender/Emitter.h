@@ -77,6 +77,7 @@ public:
 	void setVelocity(Velocity v)					   { velocity = v; }
 	void setVelocityInheritance(float v)			   { velocityInheritance = v; }
 	void setLockedToLocalSpace(bool v)				   { lockedToLocalSpace = v; }
+	void setSquash(float v)							   { squash = v; }
 
     void setAppearance(const Appearance& a, const std::string& context = "");
     void setModulateColor(const Vector4& v)            { modulateColor = v; }
@@ -130,6 +131,7 @@ private:
 	bool						lockedToLocalSpace;
 	float						velocityInheritance; //determines whether the particles gain the velocity of the emitting part
 	Vector2						sphericalDirection; //basically is the direction of the emission in spherical theta/phi format
+	float						squash; // particle squash along velocity direction
 
     
     // NEW STUFF!

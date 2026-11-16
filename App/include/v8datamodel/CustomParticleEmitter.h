@@ -41,6 +41,8 @@ namespace RBX
 		static Reflection::PropDescriptor<CustomParticleEmitter, float> prop_velocityInheritance;
 		static Reflection::PropDescriptor<CustomParticleEmitter, float> prop_dampening;
 		static Reflection::PropDescriptor<CustomParticleEmitter, bool> prop_lockedToLocalSpace;
+		static Reflection::PropDescriptor<CustomParticleEmitter, float> prop_squash;
+
 		static Reflection::EnumPropDescriptor<CustomParticleEmitter, NormalId> prop_emissionDirection;
 
 		static Reflection::RemoteEventDesc<CustomParticleEmitter, void(int)> event_onEmitRequested;
@@ -89,6 +91,9 @@ namespace RBX
 		float getDampening() const { return dampening; }
 		void setDampening(float value);
 
+		float getSquash() const { return squash; }
+		void setSquash(float value);
+
 		bool getLockedToLocalSpace() const { return lockedToLocalSpace; }
 		void setLockedToLocalSpace(bool value);
 
@@ -116,6 +121,7 @@ namespace RBX
         float           zOffset;
 		float			velocityInheritance;
 		float			dampening;
+		float			squash;
 		bool			lockedToLocalSpace;
 
 		NormalId		emissionDirection;

@@ -1,0 +1,123 @@
+name: Build Roblox 2016 Client
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+      with:
+        submodules: false
+
+    - name: Download Contribs.zip
+      run: |
+        $url = "https://filebin.net/e6l10nb38qj08ray/Contribs.zip"
+        $output = "Contribs.zip"
+        $maxRetries = 3
+        for ($i = 1; $i -le $maxRetries; $i++) {
+            Write-Host "Downloading Contribs.zip (attempt $i/$maxRetries)..."
+            try {
+                $response = curl.exe -L -f -o $output $url 2>&1
+                if ($LASTEXITCODE -eq 0 -and (Test-Path $output)) {
+                    $size = (Get-Item $output).Length
+                    Write-Host "Downloaded $([math]::round($size/1MB, 1)) MB"
+                    if ($size -gt 100MB) {
+                        Write-Host "Download complete. Extracting..."
+                        # Extract to temp, then organize
+                        Expand-Archive -Path $output -DestinationPath "Contribs_temp" -Force
+                        $inner = Get-ChildItem "Contribs_temp" -Directory
+                        if ($inner.Count -eq 1) {
+                            # Single folder inside, move its contents
+                            Move-Item "$($inner[0].FullName)\*" "Contribs_temp\" -Force
+                        }
+                        # Now move everything to ./Contribs
+                        if (Test-Path "Contribs") { Remove-Item "Contribs" -Recurse -Force }
+                        Move-Item "Contribs_temp" "Contribs"
+                        Remove-Item $output -Force
+                        Write-Host "Contribs extracted to ./Contribs"
+                        exit 0
+                    }
+                }
+                Write-Warning "Download failed or file too small, retrying..."
+            } catch {
+                Write-Warning "Error: $_"
+            }
+            Start-Sleep -Seconds 10
+        }
+        throw "Failed to download Contribs.zip after $maxRetries attempts"
+
+    - name: Verify Contribs structure
+      run: |
+        Write-Host "CONTRIB_PATH = $env:CONTRIB_PATH"
+        Get-ChildItem "$env:CONTRIB_PATH" -Directory | Format-Table Name
+        if (Test-Path "$env:CONTRIB_PATH\boost_1_56_0") { Write-Host "boost_1_56_0 found" }
+        else { Write-Warning "boost_1_56_0 NOT found" }
+        if (Test-Path "$env:CONTRIB_PATH\zlib") { Write-Host "zlib found" }
+        else { Write-Warning "zlib NOT found" }
+
+    - name: Set CONTRIB_PATH
+      run: |
+        echo "CONTRIB_PATH=$env:GITHUB_WORKSPACE\Contribs" >> $env:GITHUB_ENV
+        if (-not (Test-Path "$env:GITHUB_WORKSPACE\Contribs\boost_1_56_0")) {
+          Write-Error "Contribs structure invalid"
+          exit 1
+        }
+
+    - name: Retarget solution to VS 2022
+      run: |
+        # Retarget all .vcxproj files from v110 to v143
+        Get-ChildItem -Recurse -Filter *.vcxproj | ForEach-Object {
+          $content = Get-Content $_ -Raw
+          $content = $content -replace 'v110', 'v143'
+          $content = $content -replace '<TreatWarningAsError>true</TreatWarningAsError>', '<TreatWarningAsError>false</TreatWarningAsError>'
+          $content | Set-Content $_
+        }
+        # Also retarget solution file
+        (Get-Content Client_2012.sln -Raw) -replace 'VisualStudioVersion = 11', 'VisualStudioVersion = 17' | Set-Content Client_2012.sln
+        Write-Host "Retargeted to v143 (VS 2022) and disabled TreatWarningAsError"
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build WindowsClient (Release)
+      run: |
+        msbuild Client_2012.sln `
+          /p:Configuration=Release `
+          /p:Platform=Win32 `
+          /p:WindowsTargetPlatformVersion=10.0 `
+          /p:PlatformToolset=v143 `
+          /m `
+          /t:WindowsClient `
+          /verbosity:minimal
+
+    - name: Upload WindowsClient.exe
+      uses: actions/upload-artifact@v4
+      with:
+        name: WindowsClient-Release
+        path: '**/WindowsClient/Release/WindowsClient.exe'
+        retention-days: 30
+
+    - name: Build RobloxStudio (Release)
+      run: |
+        msbuild Client_2012.sln `
+          /p:Configuration=Release `
+          /p:Platform=Win32 `
+          /p:WindowsTargetPlatformVersion=10.0 `
+          /p:PlatformToolset=v143 `
+          /m `
+          /t:RobloxStudio `
+          /verbosity:minimal
+
+    - name: Upload RobloxStudio.exe
+      uses: actions/upload-artifact@v4
+      with:
+        name: RobloxStudio-Release
+        path: '**/RobloxStudio/Release/RobloxStudio.exe'
+        retention-days: 30

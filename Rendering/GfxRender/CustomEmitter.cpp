@@ -238,6 +238,7 @@ void CustomEmitter::applyAllSettings()
 		emitter->setLockedToLocalSpace(effect->getLockedToLocalSpace());
 
 		emitter->setVelocityInheritance(effect->getVelocityInheritance());
+		emitter->setSquash(effect->getSquash());
 
         localBox = emitter->computeBBox();
         updateWorldBounds(localBox.toWorldSpace(transform));
